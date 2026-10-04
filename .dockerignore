@@ -2,3 +2,6 @@
 .claude
 Dockerfile
 .dockerignore
+node_modules
+dist
+sons
