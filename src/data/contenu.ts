@@ -1,5 +1,19 @@
 export const LETTRES = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ']
-export const VOYELLES = ['A', 'E', 'I', 'O', 'U', 'Y', 'OU', 'AU', 'ON', 'AN', 'EN', 'IN', 'UN']
+export const VOYELLES = [
+  'AU au',
+  'AI ai',
+  'AN an',
+  'EU eu',
+  'EI ei',
+  'EN en',
+  'OU ou',
+  'OI oi',
+  'ON on',
+  'OUI oui',
+  'UI ui',
+  'UN un',
+  'IN in',
+]
 export const MOTS = [
   'UN',
   'UNE',
@@ -11,7 +25,8 @@ export const MOTS = [
   'EST',
   'IL',
   'ELLE',
-  'À',
+  'CE',
+  'SE',
   'DE',
   'DU',
   'EN',
