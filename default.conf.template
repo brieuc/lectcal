@@ -1,0 +1,12 @@
+server {
+    listen 80;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Configuration de l'app générée au démarrage à partir de SONS_URL
+    location = /config.js {
+        default_type application/javascript;
+        add_header Cache-Control "no-store";
+        return 200 "window.CONFIG = { urlSons: '${SONS_URL}' };";
+    }
+}

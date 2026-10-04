@@ -131,9 +131,12 @@
 <div id="tourne"><span>🔄</span>Tourne l'écran</div>
 <nav id="menu"></nav>
 <div id="grille"></div>
+<script src="config.js" onerror="void 0"></script>
 <script>
   // Chaque page : titre, colonnes/lignes,
-  // et la liste des éléments. Le son d'un élément est sons/<dossier>/<ÉLÉMENT>.m4a
+  // et la liste des éléments. Le son d'un élément est <URL_SONS><dossier><ÉLÉMENT>.m4a
+  // URL du dossier des sons, fournie par config.js (voir .env / .env.prod)
+  const URL_SONS = window.CONFIG?.urlSons ?? "sons/";
   const LETTRES = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ"];
   const VOYELLES = ["A", "E", "I", "O", "U", "Y", "OU", "AU", "ON", "AN", "EN", "IN", "UN"];
   const MOTS = ["UN", "UNE", "DES", "LE", "LA", "LES", "ET", "EST", "IL", "ELLE",
@@ -141,10 +144,10 @@
   const NOMBRES = Array.from({ length: 99 }, (_, i) => String(i + 1));
 
   const PAGES = [
-    { titre: "Alphabet", dossier: "sons", grille: [6, 5], items: LETTRES, minuscule: true },
-    { titre: "Voyelles", dossier: "sons", grille: [5, 3], items: VOYELLES },
-    { titre: "Petits mots", dossier: "sons/mots", grille: [5, 4], items: MOTS },
-    { titre: "Nombres", dossier: "sons/nombres", grille: [10, 10], items: ["", ...NOMBRES] },
+    { titre: "Alphabet", dossier: "", grille: [6, 5], items: LETTRES, minuscule: true },
+    { titre: "Voyelles", dossier: "", grille: [5, 3], items: VOYELLES },
+    { titre: "Petits mots", dossier: "mots/", grille: [5, 4], items: MOTS },
+    { titre: "Nombres", dossier: "nombres/", grille: [10, 10], items: ["", ...NOMBRES] },
     { titre: "Jeux", rendu: reglagesJeux },
   ];
 
@@ -260,7 +263,7 @@
       d.textContent = texte;
       // taille d'une case : largeur 100vw / colonnes, hauteur (100vh - menu) / lignes
       d.style.fontSize = `min(${0.65 * 86 / l}vh, ${100 / c / texte.length}vw)`;
-      d.onclick = () => jouer(`${page.dossier}/${item}.m4a`);
+      d.onclick = () => jouer(`${URL_SONS}${page.dossier}${item}.m4a`);
       return d;
     }));
   }

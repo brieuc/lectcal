@@ -2,6 +2,8 @@
 
 L'app est servie par un conteneur `nginx:alpine` (`lectcal`), exposé en HTTPS par le reverse proxy `nginx-proxy` sur `https://vps-4ac2e447.vps.ovh.net/lectcal/`.
 
+Les sons ne sont pas dans le conteneur : comme les icônes de cashtag, ils sont servis directement par `nginx-proxy` depuis `/var/app/uploads/lectcal/` à l'URL `/uploads/lectcal/` (le proxy monte déjà `/var/app/uploads` en lecture seule).
+
 ## Répertoires
 
 | Où | Chemin | Contenu |
@@ -10,12 +12,25 @@ L'app est servie par un conteneur `nginx:alpine` (`lectcal`), exposé en HTTPS p
 | Mac | `~/Documents/projets/lectcal/sons/` | les `.m4a` (source) |
 | Mac | `~/Documents/projets/nginx-proxy/` | `docker-compose.yml` et `nginx.conf` du proxy |
 | VPS | dossier du projet lectcal (au choix) | même contenu que sur le Mac, sans `sons/` |
-| VPS | `/var/app/lectcal/sons/` | sons servis (monté dans le conteneur) |
+| VPS | `/var/app/uploads/lectcal/sons/` | sons, servis par nginx-proxy à `/uploads/lectcal/sons/` |
 | VPS | dossier du projet nginx-proxy | `nginx.conf` à tenir à jour |
 | Conteneur | `/usr/share/nginx/html/` | `index.html`, `manifest.json` |
-| Conteneur | `/usr/share/nginx/html/sons/` | vue sur `/var/app/lectcal/sons` (lecture seule) |
 
-Le volume du `docker-compose.yml` se lit `chemin_hôte:chemin_conteneur:ro`. Le dossier `/usr/share/nginx/html/sons` est dans le conteneur : il n'y a rien à y faire à la main.
+Le `location /uploads/lectcal/` de `nginx.conf` fait un `alias` vers `/var/app/uploads/lectcal/`, avec un cache de 1 jour.
+
+## Configuration par environnement
+
+`index.html` est statique (pas de build). L'URL des sons vient d'un `config.js` généré au démarrage du conteneur par `default.conf.template` (nginx remplace `${SONS_URL}`). Sans `config.js` (par exemple avec `python3 -m http.server`), l'app utilise `sons/` par défaut.
+
+| Fichier | `SONS_URL` | `SONS_HOST_DIR` | Usage |
+|---|---|---|---|
+| `.env` | `sons/` | `./sons` | local : le conteneur sert les sons du projet |
+| `.env.prod` | `/uploads/lectcal/sons/` | `/var/app/uploads/lectcal/sons` | VPS : les sons sont servis par nginx-proxy |
+
+- Local : le plus simple est `python3 -m http.server` dans le dossier du projet (URL par défaut `sons/`). Avec Docker, `.env` est lu automatiquement mais le compose ne publie aucun port et exige le réseau `web`.
+- Production : `docker compose --env-file .env.prod up -d --build`.
+
+Changer une variable demande un `up -d` (recréation du conteneur), pas de rebuild.
 
 ## Arborescence des sons
 
@@ -35,15 +50,15 @@ Noms en majuscules, extension `.m4a`, accents compris (`À.m4a`).
 ### Envoyer les sons (depuis le Mac)
 
 ```
-rsync -av sons/ debian@IP_VPS:/var/app/lectcal/sons/
+rsync -av sons/ debian@IP_VPS:/var/app/uploads/lectcal/sons/
 ```
 
 ### Premier déploiement (sur le VPS)
 
 ```
-mkdir -p /var/app/lectcal/sons/mots /var/app/lectcal/sons/nombres
+mkdir -p /var/app/uploads/lectcal/sons/mots /var/app/uploads/lectcal/sons/nombres
 cd <dossier lectcal>
-docker compose up -d --build
+docker compose --env-file .env.prod up -d --build
 docker exec nginx_reverse_proxy nginx -s reload
 ```
 
@@ -52,12 +67,12 @@ Lancer le conteneur `lectcal` **avant** de recharger nginx. Sinon le reload éch
 ### Mise à jour du code (`index.html`, `manifest.json`)
 
 ```
-docker compose up -d --build
+docker compose --env-file .env.prod up -d --build
 ```
 
 ### Mise à jour des sons
 
-Un `rsync` suffit, sans rebuild. Vider le cache du navigateur si un son a changé.
+Un `rsync` suffit, sans rebuild ni reload. Le cache navigateur est de 1 jour : le vider si un son a changé.
 
 ### Mise à jour du proxy
 
@@ -71,7 +86,7 @@ docker exec nginx_reverse_proxy nginx -s reload
 ```
 docker compose ps                                  # état du conteneur
 docker logs -f lectcal                             # logs
-docker exec lectcal ls /usr/share/nginx/html/sons  # sons visibles par le conteneur
+docker exec nginx_reverse_proxy ls /var/app/uploads/lectcal/sons  # sons visibles par le proxy
 docker network inspect web                         # lectcal doit y figurer
 ```
 
