@@ -1,0 +1,9 @@
+{
+  "name": "Lecture",
+  "short_name": "Lecture",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#fff8e7",
+  "theme_color": "#2f6fde"
+}
