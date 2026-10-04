@@ -3,6 +3,8 @@ services:
     build: .
     container_name: lectcal
     restart: always
+    volumes:
+      - /var/app/lectcal/sons:/usr/share/nginx/html/sons:ro
     networks:
       - web
 
